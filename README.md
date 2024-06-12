@@ -7,11 +7,11 @@ Created with MediaPipe.
 
 ### Annotating static image
 
-`tracker_img.py` - body tracker for static images. Add image(s) to the list `IMAGE_FILES` and start it:
+`tracker_img.py` - body tracker for static images. Use path to image(s) as command line options:
 
-    > python tracker_img.py
+    > python tracker_img.py path/to/example1.jpg path/to/example2.jpg
 
-Annnoted image will be placed to the same directory with the filename `<image_filename>_annotated.<ext>`
+Annnoted image will be placed to the same directory with the filename `path/to/example<N>_annotated.jpg`
 
 ### Tracking body with a camera
 
