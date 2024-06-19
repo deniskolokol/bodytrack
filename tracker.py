@@ -1,7 +1,8 @@
 """
 Main module for body tracking:
 - obtains landmarks from the camera input
-- sends OSC messages with right habnd and left hand to the receiver (e.g.SuperCollider)
+- sends OSC messages with right habnd and left hand to the receiver
+  (e.g.SuperCollider)
 - sends landmarks to visualization module.
 """
 
@@ -21,13 +22,6 @@ pose_lmark = mp_holistic.PoseLandmark
 
 
 def send_messages(client, body, _id=1):
-    # info: https://google.github.io/mediapipe/solutions/hands.html
-    try:
-        lmark = body.pose_landmarks.landmark
-    except Exception as err:
-        print("{}: {}".format(type(err).__name__, err))
-        return
-
     def _do_send_osc(joint, lmark):
         try:
             message = [joint, _id, lmark.x, lmark.y, lmark.z]
@@ -35,6 +29,13 @@ def send_messages(client, body, _id=1):
             print("{}: {}".format(type(err).__name, err))
         else:
             client.send_message('/joint', message)
+
+    # info: https://google.github.io/mediapipe/solutions/hands.html
+    try:
+        lmark = body.pose_landmarks.landmark
+    except Exception as err:
+        print("{}: {}".format(type(err).__name__, err))
+        return
 
     _do_send_osc('head', lmark[pose_lmark.NOSE])
     _do_send_osc('neck', lmark[pose_lmark.NOSE])
@@ -97,28 +98,31 @@ def main(**kwargs):
             # Convert the image the BGR image to RGB.
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-            # To improve performance, optionally mark the image as not writeable to
-            # pass by reference.
+            # To improve performance, optionally mark the image as not
+            # writeable to pass by reference.
             image.flags.writeable = False
             results = holistic.process(image)
 
             # Draw landmark annotation on the image.
             image.flags.writeable = True
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-            mp_drawing.draw_landmarks(
-                image, results.face_landmarks, mp_holistic.FACE_CONNECTIONS)
-            mp_drawing.draw_landmarks(
-                image, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
-            mp_drawing.draw_landmarks(
-                image, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
-            mp_drawing.draw_landmarks(
-                image, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)\
-
+            mp_drawing.draw_landmarks(image,
+                                      results.face_landmarks,
+                                      mp_holistic.FACEMESH_TESSELATION)
+            mp_drawing.draw_landmarks(image,
+                                      results.left_hand_landmarks,
+                                      mp_holistic.HAND_CONNECTIONS)
+            mp_drawing.draw_landmarks(image,
+                                      results.right_hand_landmarks,
+                                      mp_holistic.HAND_CONNECTIONS)
+            mp_drawing.draw_landmarks(image,
+                                      results.pose_landmarks,
+                                      mp_holistic.POSE_CONNECTIONS)
             cv2.imshow('MediaPipe Holistic', image)
             send_messages(client, results, _id=skel_id)
 
             if cv2.waitKey(5) & 0xFF == 27:
-              break
+                break
 
     cap.release()
 
